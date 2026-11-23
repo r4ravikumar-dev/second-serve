@@ -1,0 +1,20 @@
+{
+  "displayName": "Second Serve: availability SLO fast burn (5xx)",
+  "severity": "CRITICAL",
+  "combiner": "OR",
+  "conditions": [{
+    "displayName": "5xx error ratio > 14.4x burn of 99.9% SLO (5m and 1h windows)",
+    "conditionPrometheusQueryLanguage": {
+      "query": "(sum(rate(run_googleapis_com:request_count{monitored_resource=\"cloud_run_revision\", service_name=\"__SERVICE__\", response_code_class=\"5xx\"}[5m])) by (service_name, location) / sum(rate(run_googleapis_com:request_count{monitored_resource=\"cloud_run_revision\", service_name=\"__SERVICE__\"}[5m])) by (service_name, location) > (1 - 0.999) * 14.4) and (sum(rate(run_googleapis_com:request_count{monitored_resource=\"cloud_run_revision\", service_name=\"__SERVICE__\", response_code_class=\"5xx\"}[1h])) by (service_name, location) / sum(rate(run_googleapis_com:request_count{monitored_resource=\"cloud_run_revision\", service_name=\"__SERVICE__\"}[1h])) by (service_name, location) > (1 - 0.999) * 14.4) and (sum(rate(run_googleapis_com:request_count{monitored_resource=\"cloud_run_revision\", service_name=\"__SERVICE__\"}[1h])) by (service_name, location) > 0.05)",
+      "duration": "300s",
+      "evaluationInterval": "60s"
+    }
+  }],
+  "alertStrategy": { "autoClose": "604800s" },
+  "notificationChannels": ["__CHANNEL__"],
+  "userLabels": { "created-with-google-skill": "cloud-run-alert-configuration", "app": "second-serve" },
+  "documentation": {
+    "mimeType": "text/markdown",
+    "content": "Users are getting server errors. Check Error Reporting and Cloud Run logs for `jsonPayload.event=\"unhandled\"`. Roll back with `gcloud run services update-traffic second-serve --to-revisions=PREVIOUS=100 --region=asia-south1`. Min-volume guard lowered to 0.05 req/s for pilot traffic (skill default 1 req/s)."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "displayName": "Second Serve: instances at max (3)",
+  "severity": "WARNING",
+  "combiner": "OR",
+  "conditions": [{
+    "displayName": "Active instances >= 95% of max_instances (3) for 5 min",
+    "conditionPrometheusQueryLanguage": {
+      "query": "max(max_over_time(run_googleapis_com:container_instance_count{monitored_resource=\"cloud_run_revision\", service_name=\"__SERVICE__\", state=\"active\"}[5m])) by (service_name, location) / 3 >= 0.95",
+      "duration": "300s",
+      "evaluationInterval": "60s"
+    }
+  }],
+  "alertStrategy": { "autoClose": "604800s" },
+  "notificationChannels": ["__CHANNEL__"],
+  "userLabels": { "created-with-google-skill": "cloud-run-alert-configuration", "app": "second-serve" },
+  "documentation": {
+    "mimeType": "text/markdown",
+    "content": "The service is at its cost-capping ceiling of 3 instances, so extra requests queue. Either real demand grew (consider raising max-instances and the budget) or something is looping or being abused (check request logs by path and IP)."
+  }
+}

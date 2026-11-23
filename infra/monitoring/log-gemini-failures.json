@@ -1,0 +1,10 @@
+{
+  "displayName": "Second Serve: Gemini calls failing",
+  "severity": "WARNING",
+  "combiner": "OR",
+  "conditions": [{ "displayName": "Matching log entry", "conditionMatchedLog": { "filter": "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"__SERVICE__\" AND jsonPayload.event=\"gemini_call_failed\"" } }],
+  "alertStrategy": { "notificationRateLimit": { "period": "300s" }, "autoClose": "1800s" },
+  "notificationChannels": ["__CHANNEL__"],
+  "userLabels": { "app": "second-serve" },
+  "documentation": { "mimeType": "text/markdown", "content": "AI drafts, voice updates or licence reading are failing. Merchants can still fill forms manually. Check quota (429) or model availability in the log message." }
+}

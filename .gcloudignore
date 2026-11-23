@@ -1,0 +1,9 @@
+# Same exclusions as .dockerignore for `gcloud builds submit`
+node_modules/
+.next/
+.data/
+.env*
+!.env.example
+infra/generated/
+.git/
+.claude/

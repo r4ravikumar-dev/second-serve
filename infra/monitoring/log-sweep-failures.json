@@ -1,0 +1,10 @@
+{
+  "displayName": "Second Serve: scheduled sweep failing",
+  "severity": "ERROR",
+  "combiner": "OR",
+  "conditions": [{ "displayName": "Matching log entry", "conditionMatchedLog": { "filter": "resource.type=\"cloud_scheduler_job\" AND resource.labels.job_id=\"second-serve-sweep\" AND severity>=ERROR" } }],
+  "alertStrategy": { "notificationRateLimit": { "period": "300s" }, "autoClose": "1800s" },
+  "notificationChannels": ["__CHANNEL__"],
+  "userLabels": { "app": "second-serve" },
+  "documentation": { "mimeType": "text/markdown", "content": "The 15-minute sweep (offer expiry, no-shows, stock roll-over, licence suspension) failed. Reads still filter by time, but no-shows and licence suspensions are delayed. Check the job's HTTP status (401/403 = OIDC audience or SCHEDULER_SA mismatch)." }
+}

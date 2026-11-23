@@ -1,0 +1,9 @@
+{
+  "name": "Second Serve",
+  "short_name": "Second Serve",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAFAFA",
+  "theme_color": "#714FFF",
+  "icons": []
+}

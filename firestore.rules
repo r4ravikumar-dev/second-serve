@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Second Serve security rules.
+// - publicOffers: read-only projection of LIVE offers (public fields only) so the
+//   customer map/list can use real-time listeners. List queries are capped at 100.
+// - Everything else: no direct client access. All writes and all other reads go
+//   through the Cloud Run API (Admin SDK bypasses these rules), which verifies the
+//   Firebase ID token, checks the user's role and validates input.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /publicOffers/{offerId} {
+      allow get: if true;
+      allow list: if request.query.limit != null && request.query.limit <= 100;
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

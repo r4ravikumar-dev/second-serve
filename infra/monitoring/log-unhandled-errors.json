@@ -1,0 +1,10 @@
+{
+  "displayName": "Second Serve: unhandled server errors",
+  "severity": "ERROR",
+  "combiner": "OR",
+  "conditions": [{ "displayName": "Matching log entry", "conditionMatchedLog": { "filter": "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"__SERVICE__\" AND jsonPayload.event=\"unhandled\"" } }],
+  "alertStrategy": { "notificationRateLimit": { "period": "300s" }, "autoClose": "1800s" },
+  "notificationChannels": ["__CHANNEL__"],
+  "userLabels": { "app": "second-serve" },
+  "documentation": { "mimeType": "text/markdown", "content": "A request crashed. Open Error Reporting for the stack trace." }
+}

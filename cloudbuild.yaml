@@ -1,0 +1,68 @@
+# Second Serve — Cloud Build: test → build image → push to Artifact Registry → roll out to Cloud Run.
+# Manual run (infra/deploy.sh does this for you):
+#   gcloud builds submit --config=cloudbuild.yaml --region=asia-south1 \
+#     --service-account=projects/$PROJECT_ID/serviceAccounts/second-serve-build@$PROJECT_ID.iam.gserviceaccount.com \
+#     --gcs-source-staging-dir=gs://$PROJECT_ID-second-serve-build/source \
+#     --substitutions=_DEPLOY=true,...(public values)
+# Runtime config (env vars, secrets, service account) is owned by infra/deploy.sh; the
+# deploy step here only swaps the image, keeping that config.
+
+substitutions:
+  _REGION: asia-south1
+  _SERVICE: second-serve
+  _REPO: second-serve
+  _DEPLOY: "true"
+  _TAG: manual
+  _MAPS_KEY: ""
+  _MAPS_MAP_ID: ""
+  _FB_API_KEY: ""
+  _FB_AUTH_DOMAIN: ""
+  _FB_PROJECT_ID: ""
+  _FB_APP_ID: ""
+
+steps:
+  # Gate: type check + unit/integration tests (no cloud access needed) before any image is built.
+  - id: test
+    name: node:24-slim
+    entrypoint: bash
+    args: ["-c", "npm ci --no-audit --no-fund && npx tsc --noEmit && npm test"]
+
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:${_TAG}
+      - --build-arg=NEXT_PUBLIC_AUTH_MODE=firebase
+      - --build-arg=NEXT_PUBLIC_MAPS_BROWSER_KEY=${_MAPS_KEY}
+      - --build-arg=NEXT_PUBLIC_MAPS_MAP_ID=${_MAPS_MAP_ID}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_API_KEY=${_FB_API_KEY}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${_FB_AUTH_DOMAIN}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_FB_PROJECT_ID}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_APP_ID=${_FB_APP_ID}
+      - .
+
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args: ["push", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:${_TAG}"]
+
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if [ "${_DEPLOY}" = "true" ]; then
+          gcloud run deploy ${_SERVICE} \
+            --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:${_TAG} \
+            --region=${_REGION} --quiet
+        else
+          echo "Image built; skipping deploy (_DEPLOY=${_DEPLOY})"
+        fi
+
+images:
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_SERVICE}:${_TAG}
+
+options:
+  logging: CLOUD_LOGGING_ONLY   # required with a user-specified build service account
+
+timeout: 1200s

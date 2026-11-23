@@ -1,0 +1,20 @@
+{
+  "displayName": "Second Serve: health check failing",
+  "severity": "CRITICAL",
+  "combiner": "OR",
+  "conditions": [{
+    "displayName": "/api/health uptime check failing from more than 1 region",
+    "conditionThreshold": {
+      "filter": "metric.type=\"monitoring.googleapis.com/uptime_check/check_passed\" AND resource.type=\"uptime_url\" AND metric.label.check_id=\"__CHECK_ID__\"",
+      "aggregations": [{ "alignmentPeriod": "1200s", "perSeriesAligner": "ALIGN_NEXT_OLDER", "crossSeriesReducer": "REDUCE_COUNT_FALSE", "groupByFields": ["resource.label.project_id", "resource.label.host"] }],
+      "comparison": "COMPARISON_GT",
+      "thresholdValue": 1,
+      "duration": "0s",
+      "trigger": { "count": 1 }
+    }
+  }],
+  "alertStrategy": { "autoClose": "604800s" },
+  "notificationChannels": ["__CHANNEL__"],
+  "userLabels": { "app": "second-serve" },
+  "documentation": { "mimeType": "text/markdown", "content": "The site is down from multiple regions. Check the latest Cloud Run revision and roll back if needed." }
+}
